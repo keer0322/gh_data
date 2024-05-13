@@ -1,3 +1,15 @@
+To generate a token for project-level analysis in SonarQube, you typically need administrative access to your SonarQube instance. Here are the general steps to generate a project-level token:
+
+Log in to SonarQube: Navigate to your SonarQube instance in your web browser and log in with your credentials. You need administrative privileges to generate a token.
+
+Go to Project Settings: Once logged in, find the project for which you want to generate the token. Click on the project name to access its settings.
+
+Navigate to Tokens Section: Look for a section or tab related to project settings or administration. Depending on your SonarQube version and configuration, the exact location may vary. You might find it under "Administration", "Project Settings", or similar.
+
+Generate Token: In the project settings, you should find an option to generate a new token specific to that project. Click on the "Generate Token" button or similar.
+
+Set Token Permissions: You may be prompted to set permissions for the token. Choose the appropriate permissions based on the tasks you want to perform with the token. For running analyses at the project level, the token typically needs permissions related to scanning projects and possibly project administration.
+
 Sonar Nodejs Properties
 1.	sonar.projectKey: Unique identifier for your project in SonarQube.
 2.	sonar.projectName: Name of your project.
