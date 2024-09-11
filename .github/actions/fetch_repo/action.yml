@@ -1,0 +1,17 @@
+name: 'Fetch Organization Repos'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch repositories
+        uses: ./.github/actions/fetch-repos
+        with:
+          organization: 'your-organization-name'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Show fetched repos
+        run: echo "Repositories: ${{ steps.fetch-repos.outputs.repositories }}"
