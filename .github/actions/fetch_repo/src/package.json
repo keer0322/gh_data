@@ -1,0 +1,8 @@
+{
+  "name": "fetch-repos",
+  "version": "1.0.0",
+  "main": "fetch-repos.js",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
