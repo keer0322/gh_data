@@ -1,0 +1,18 @@
+name: "Sync Vault Secrets with CircleCI"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync Vault secrets to CircleCI context
+        uses: ./.github/actions/sync_cci_context
+        with:
+          vault_address: ${{ secrets.VAULT_ADDRESS }}
+          vault_token: ${{ secrets.VAULT_TOKEN }}
+          vault_secret_path: "secret/data/your-path"
+          circleci_token: ${{ secrets.CIRCLECI_TOKEN }}
+          circleci_org_slug: "github/your-org"
+          circleci_context_id: "your-circleci-context-id"
