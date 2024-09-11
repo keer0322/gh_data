@@ -1,0 +1,48 @@
+name: "Sync Vault Secrets to CircleCI Context"
+description: "Sync all secrets from a specific Vault path to CircleCI Context"
+
+inputs:
+  vault_address:
+    description: "Vault server address"
+    required: true
+  vault_token:
+    description: "Token to authenticate with Vault"
+    required: true
+  vault_secret_path:
+    description: "The path in Vault where the secrets are stored"
+    required: true
+  circleci_token:
+    description: "Token to authenticate with CircleCI"
+    required: true
+  circleci_org_slug:
+    description: "CircleCI organization slug (e.g. github/your-org)"
+    required: true
+  circleci_context_id:
+    description: "ID of the CircleCI Context"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./scripts
+
+    - name: Sync Vault secrets to CircleCI
+      run: |
+        node sync-secrets.js \
+          ${{ inputs.vault_address }} \
+          ${{ inputs.vault_token }} \
+          ${{ inputs.vault_secret_path }} \
+          ${{ inputs.circleci_token }} \
+          ${{ inputs.circleci_org_slug }} \
+          ${{ inputs.circleci_context_id }}
+      working-directory: ./scripts
