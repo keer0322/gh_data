@@ -1,12 +1,15 @@
 name: "Sync Vault Secrets to CircleCI Context"
-description: "Sync all secrets from a specific Vault path to CircleCI Context"
+description: "Sync all secrets from a specific Vault path to CircleCI Context using AppRole authentication"
 
 inputs:
   vault_address:
     description: "Vault server address"
     required: true
-  vault_token:
-    description: "Token to authenticate with Vault"
+  role_id:
+    description: "Vault AppRole Role ID"
+    required: true
+  secret_id:
+    description: "Vault AppRole Secret ID"
     required: true
   vault_secret_path:
     description: "The path in Vault where the secrets are stored"
@@ -15,7 +18,7 @@ inputs:
     description: "Token to authenticate with CircleCI"
     required: true
   circleci_org_slug:
-    description: "CircleCI organization slug (e.g. github/your-org)"
+    description: "CircleCI organization slug (e.g., github/your-org)"
     required: true
   circleci_context_id:
     description: "ID of the CircleCI Context"
@@ -40,7 +43,8 @@ runs:
       run: |
         node sync-secrets.js \
           ${{ inputs.vault_address }} \
-          ${{ inputs.vault_token }} \
+          ${{ inputs.role_id }} \
+          ${{ inputs.secret_id }} \
           ${{ inputs.vault_secret_path }} \
           ${{ inputs.circleci_token }} \
           ${{ inputs.circleci_org_slug }} \
