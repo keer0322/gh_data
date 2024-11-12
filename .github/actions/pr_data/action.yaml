@@ -1,0 +1,27 @@
+name: Gradle Lint and Comment on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  gradle-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Run Gradle Lint
+      run: ./gradlew lintGradle --warning-mode=all --stacktrace --info > lint-output.txt
+
+    - name: Post Lint Failures to PR
+      run: python post-lint-comment.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
