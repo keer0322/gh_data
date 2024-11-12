@@ -1,0 +1,29 @@
+name: Unit Test and Comment on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    
+    # Run your tests and save results in a JUnit XML format file (e.g., `test-results.xml`)
+    - name: Run Unit Tests
+      run: ./gradlew test --tests "*Test" --info --stacktrace --continue
+
+    # Run the Python script to parse test results and post to PR
+    - name: Post Test Failures to PR
+      run: python parse-test-results.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
