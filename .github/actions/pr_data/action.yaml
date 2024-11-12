@@ -20,7 +20,7 @@ jobs:
       run: ./gradlew lintGradle --warning-mode=all --stacktrace --info > lint-output.txt
 
     - name: Post Lint Failures to PR
-      run: python post-lint-comment.py
+      run: python parser.py
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_REPO: ${{ github.repository }}
