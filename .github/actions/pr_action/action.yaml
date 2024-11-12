@@ -1,0 +1,56 @@
+name: Gradle Lint Check
+
+on:
+  pull_request:
+    branches:
+      - main  # or specify the branches you want
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'  # Set Java version as per your project
+
+      - name: Run Gradle Lint
+        id: gradle_lint
+        run: ./gradlew lint > lint-output.log || true  # Run lint task and save output
+        continue-on-error: true
+
+      - name: Extract Lint Errors and Warnings
+        id: parse_lint
+        run: |
+          # Extract errors and warnings from lint-results.xml
+          if [ -f app/build/reports/lint-results.xml ]; then
+            xmllint --format app/build/reports/lint-results.xml | \
+            grep -E "<issue severity=\"(Error|Warning)\"" -A 5 | \
+            sed -n 's/.*message="\([^"]*\)".*line="\(.*\)".*file="\(.*\)"/- \1 (File: \3, Line: \2)/p' \
+            > lint-messages.txt
+          else
+            echo "No lint issues found or lint-results.xml not present." > lint-messages.txt
+          fi
+
+          # Set output
+          echo "::set-output name=lint-message::$(cat lint-messages.txt)"
+        shell: bash
+
+      - name: Post Lint Results as PR Comment
+        uses: actions/github-script@v5
+        if: failure()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const lintMessage = `## Lint Errors and Warnings\n\n${{ steps.parse_lint.outputs.lint-message }}\n\nPlease address these issues.`;
+            const { context, github } = require('@actions/github');
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: lintMessage
+            });
