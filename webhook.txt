@@ -1,0 +1,29 @@
+transformed_event = {
+    "repository": github_event['repository']['full_name'],
+    "ref": github_event['ref'],
+    "commits": [
+        {
+            "id": commit["id"],
+            "message": commit["message"],
+            "timestamp": commit["timestamp"],
+            "author": commit["author"]["name"]
+        }
+        for commit in github_event['commits']
+    ],
+    "pusher": github_event['pusher']['name'],
+    "timestamp": github_event['repository']['pushed_at']
+}
+response = opensearch.index(
+    index=INDEX_NAME,
+    body=transformed_event
+    )
+curl -X GET "http://localhost:9200/github-webhook-events/_search" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match": {
+      "repository": "organization/repository"
+    }
+  }
+}')
+
+
