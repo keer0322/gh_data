@@ -1,0 +1,57 @@
+from flask import Flask, request, jsonify
+from opensearchpy import OpenSearch
+
+app = Flask(__name__)
+
+# OpenSearch configuration
+OPENSEARCH_HOST = "http://localhost:9200"  # Replace with your OpenSearch host
+INDEX_NAME = "github-webhook-events"
+opensearch = OpenSearch([OPENSEARCH_HOST])
+
+# GitHub webhook secret (optional)
+GITHUB_SECRET = "your_secret"  # Set this to match the secret in GitHub
+
+@app.route('/webhook', methods=['POST'])
+def github_webhook():
+    # Verify GitHub secret (optional)
+    import hmac
+    import hashlib
+    from flask import abort
+
+    if GITHUB_SECRET:
+        signature = request.headers.get('X-Hub-Signature-256')
+        if not signature:
+            abort(403)
+
+        payload = request.data
+        computed_signature = 'sha256=' + hmac.new(
+            GITHUB_SECRET.encode(), payload, hashlib.sha256
+        ).hexdigest()
+
+        if not hmac.compare_digest(computed_signature, signature):
+            abort(403)
+
+    # Parse the GitHub event
+    github_event = request.get_json()
+    event_type = request.headers.get('X-GitHub-Event')
+
+    # Index into OpenSearch
+    response = opensearch.index(
+        index=INDEX_NAME,
+        body={
+            "event_type": event_type,
+            "payload": github_event,
+            "timestamp": github_event.get('repository', {}).get('pushed_at', None)
+        }
+    )
+
+    return jsonify({"status": "success", "opensearch_response": response})
+
+
+if __name__ == '__main__':
+    # Ensure the OpenSearch index exists
+    if not opensearch.indices.exists(INDEX_NAME):
+        opensearch.indices.create(index=INDEX_NAME)
+
+    app.run(host='0.0.0.0', port=5000)
+    
