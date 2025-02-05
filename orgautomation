@@ -1,0 +1,72 @@
+name: Manage Org Admins
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  manage-org-admins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update && sudo apt install -y gh
+
+      - name: Authenticate with GitHub CLI
+        run: |
+          echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+
+      - name: Get Team Members
+        id: get_team_members
+        run: |
+          ORG="your-org-name"
+          TEAM_SLUG="your-team-slug"  # Team slug (not name)
+          ADMINS_FILE="admins.txt"
+
+          # Fetch team members
+          gh api orgs/$ORG/teams/$TEAM_SLUG/members | jq -r '.[].login' > $ADMINS_FILE
+
+          echo "Admins from Team:"
+          cat $ADMINS_FILE
+          echo "::set-output name=admins::$ADMINS_FILE"
+
+      - name: Get Current Org Admins
+        id: get_org_admins
+        run: |
+          ORG="your-org-name"
+          CURRENT_ADMINS_FILE="current_admins.txt"
+
+          # Fetch current organization admins
+          gh api orgs/$ORG/members --jq '.[] | select(.role=="admin") | .login' > $CURRENT_ADMINS_FILE
+
+          echo "Current Org Admins:"
+          cat $CURRENT_ADMINS_FILE
+          echo "::set-output name=current_admins::$CURRENT_ADMINS_FILE"
+
+      - name: Update Org Admins
+        run: |
+          ORG="your-org-name"
+
+          # Read files
+          ADMINS=$(cat admins.txt)
+          CURRENT_ADMINS=$(cat current_admins.txt)
+
+          # Promote new admins
+          for USER in $ADMINS; do
+            if ! grep -q "^$USER$" current_admins.txt; then
+              echo "Promoting $USER to org admin..."
+              gh api --method PATCH orgs/$ORG/memberships/$USER -f role=admin
+            fi
+          done
+
+          # Demote users who should no longer be admins
+          for USER in $CURRENT_ADMINS; do
+            if ! grep -q "^$USER$" admins.txt; then
+              echo "Demoting $USER from org admin..."
+              gh api --method PATCH orgs/$ORG/memberships/$USER -f role=member
+            fi
+          done
