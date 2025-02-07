@@ -1,0 +1,38 @@
+name: GCR to JFrog Image Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Authenticate with GCR
+        run: |
+          echo "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" | base64 --decode > gcr-key.json
+          gcloud auth activate-service-account --key-file=gcr-key.json
+          gcloud auth configure-docker gcr.io
+
+      - name: Pull Image from GCR
+        run: |
+          docker pull ${{ secrets.GCR_IMAGE }}
+
+      - name: Authenticate with JFrog Artifactory
+        run: |
+          echo "${{ secrets.JFROG_PASSWORD }}" | docker login -u "${{ secrets.JFROG_USERNAME }}" --password-stdin ${{ secrets.JFROG_URL }}
+
+      - name: Tag and Push Image to JFrog
+        run: |
+          docker tag ${{ secrets.GCR_IMAGE }} ${{ secrets.JFROG_IMAGE }}
+          docker push ${{ secrets.JFROG_IMAGE }}
+
+      - name: Cleanup Local Docker Images
+        run: |
+          docker rmi ${{ secrets.GCR_IMAGE }} ${{ secrets.JFROG_IMAGE }}
