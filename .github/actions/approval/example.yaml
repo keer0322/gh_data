@@ -1,0 +1,16 @@
+name: Example Manual Approval Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Manual Approval
+        uses: your-username/my-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          approvers: "user1,user2"
+          issue-title: "Approval Required for Deployment"
+          issue-body: "Comment 'approve' to proceed."
