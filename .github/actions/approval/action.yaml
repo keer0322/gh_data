@@ -1,0 +1,21 @@
+name: "Manual Approval Action"
+description: "Pauses a workflow and waits for manual approval"
+author: "Your Name"
+inputs:
+  approvers:
+    description: "Comma-separated list of GitHub usernames required for approval"
+    required: true
+  issue-title:
+    description: "Title of the GitHub issue for approval"
+    required: false
+    default: "Manual Approval Required"
+  issue-body:
+    description: "Body content for the approval issue"
+    required: false
+    default: "Please approve this workflow execution."
+outputs:
+  approved:
+    description: "Boolean indicating if the workflow was approved"
+runs:
+  using: "node16"
+  main: "index.js"
